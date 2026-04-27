@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './App.css'
 
 const BOOKING_URL =
-  'https://outlook.office.com/bookwithme/user/f605dc552bc64fc192526c3c83792ea3@ledgerxtr.com/meetingtype/_FgRgTaOQEyk_G3rlVZV7w2?anonymous&ismsaljsauthenabled&ep=mLinkFromTile'
+  'https://outlook.office.com/bookwithme/user/f605dc552bc64fc192526c3c83792ea3@ledgerxtr.com/meetingtype/_FgRgTaOQEyk_G3rlVZV7w2?anonymous&ismsaljsauthenabled&ep=mlink'
 const MAKE_WEBHOOK_URL = (import.meta.env.VITE_MAKE_WEBHOOK_URL as string | undefined) ?? ''
 
 type OrgType = 'Small Business' | 'Nonprofit' | 'Service Company' | 'Other'
