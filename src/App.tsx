@@ -619,7 +619,7 @@ function App() {
                   scheduling.
                 </p>
                 <p className="hintText">
-                  Current placeholder: <strong>{BOOKING_URL}</strong>
+                  You’ll be redirected to Microsoft Bookings in a new tab.
                 </p>
                 <a
                   className="btn btnPrimary"
@@ -631,8 +631,10 @@ function App() {
                   Schedule on Microsoft Bookings
                 </a>
                 <p className="hintText">
-                  If the link is still a placeholder, update <code>BOOKING_URL</code> in{' '}
-                  <code>src/App.tsx</code>.
+                  Having trouble? Use this direct link:{' '}
+                  <a className="inlineLink" href={BOOKING_URL} target="_blank" rel="noreferrer">
+                    Open booking page
+                  </a>
                 </p>
               </div>
 

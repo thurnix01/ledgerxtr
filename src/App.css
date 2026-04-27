@@ -466,6 +466,17 @@ textarea:focus {
   font-size: 14px;
 }
 
+.inlineLink {
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.35);
+}
+
+.inlineLink:hover {
+  border-bottom-color: rgba(37, 99, 235, 0.8);
+}
+
 .checkboxGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
