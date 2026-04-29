@@ -145,23 +145,24 @@ function App() {
     setSubmitting(true)
     try {
       // Supabase insert happens here.
-      const { error } = await supabase.from('ledgerxtr_call_requests').insert({
+      const payload = {
         full_name: form.fullName.trim(),
         business_name: form.orgName.trim(),
         email: form.email.trim(),
-        phone: form.phone.trim() ? form.phone.trim() : null,
+        phone: form.phone.trim(),
         organization_type: form.orgType,
         preferred_timeframe: form.timeframe,
         services_needed: servicesNeeded,
         message: form.message.trim(),
         source: 'ledgerxtr.com',
         status: 'new',
-      })
+      }
+
+      const { error } = await supabase.from('ledgerxtr_call_requests').insert([payload])
 
       if (error) {
-        // Log full error for debugging (do not show raw error details to visitors).
-        console.error('[LedgerXtR] Supabase insert error', error)
-        throw new Error('Supabase insert failed')
+        console.error('Supabase insert error:', error)
+        throw error
       }
 
       setSubmitted(true)
