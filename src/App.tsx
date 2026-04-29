@@ -2,10 +2,12 @@ import { useState } from 'react'
 import './App.css'
 import heroPhoto from './images/image_01.jpg'
 import clarityPhoto from './images/image_03.jpg'
+import { supabase } from './lib/supabaseClient'
 
 const BOOKING_URL =
   'https://outlook.office.com/bookwithme/user/f605dc552bc64fc192526c3c83792ea3@ledgerxtr.com/meetingtype/_FgRgTaOQEyk_G3rlVZV7w2?anonymous&ismsaljsauthenabled&ep=mlink'
-const MAKE_WEBHOOK_URL = (import.meta.env.VITE_MAKE_WEBHOOK_URL as string | undefined) ?? ''
+const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? ''
+const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? ''
 
 type OrgType = 'Small Business' | 'Nonprofit' | 'Service Company' | 'Other'
 type MeetingTimeframe = 'This week' | 'Next week' | 'Flexible'
@@ -129,39 +131,59 @@ function App() {
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
-    if (!MAKE_WEBHOOK_URL.trim()) {
+    if (!SUPABASE_URL.trim() || !SUPABASE_ANON_KEY.trim()) {
       setSubmitError(
-        'Form delivery is not configured yet. Please set VITE_MAKE_WEBHOOK_URL and try again.',
+        'Form delivery is not configured yet. Please try again later.',
       )
       return
     }
 
-    const payload = {
-      fullName: form.fullName,
-      orgName: form.orgName,
-      email: form.email,
-      phone: form.phone,
-      orgType: form.orgType,
-      timeframe: form.timeframe,
-      servicesNeeded: (Object.keys(form.servicesNeeded) as ServiceNeeded[]).filter(
-        (k) => form.servicesNeeded[k],
-      ),
-      message: form.message,
-    }
+    const servicesNeeded = (Object.keys(form.servicesNeeded) as ServiceNeeded[]).filter(
+      (k) => form.servicesNeeded[k],
+    )
 
-    // TODO: You can swap Make for Formspree, Netlify Forms, Supabase, or a Power Automate webhook.
     setSubmitting(true)
     try {
-      // NOTE: Make webhooks often don't support CORS preflight for JSON.
-      // Using `mode: 'no-cors'` + a simple content-type avoids OPTIONS preflight in browsers.
-      await fetch(MAKE_WEBHOOK_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-        body: JSON.stringify(payload),
+      // Supabase insert happens here.
+      const { error } = await supabase.from('ledgerxtr_call_requests').insert({
+        full_name: form.fullName.trim(),
+        business_name: form.orgName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim() ? form.phone.trim() : null,
+        organization_type: form.orgType,
+        preferred_timeframe: form.timeframe,
+        services_needed: servicesNeeded,
+        message: form.message.trim(),
+        source: 'ledgerxtr.com',
+        status: 'new',
       })
 
+      if (error) {
+        // Log full error for debugging (do not show raw error details to visitors).
+        console.error('[LedgerXtR] Supabase insert error', error)
+        throw new Error('Supabase insert failed')
+      }
+
       setSubmitted(true)
+      setForm({
+        fullName: '',
+        orgName: '',
+        email: '',
+        phone: '',
+        orgType: 'Small Business',
+        servicesNeeded: {
+          Bookkeeping: false,
+          'Payroll Support': false,
+          'Sales Tax Organization': false,
+          'Nonprofit Accounting Support': false,
+          'Financial Reporting': false,
+          'Tax-Ready Books': false,
+          'Accounting System Setup': false,
+        },
+        timeframe: 'Flexible',
+        message: '',
+      })
+      setErrors({})
     } catch (err) {
       console.error('[LedgerXtR] Booking request error', err)
       setSubmitError(
