@@ -1,6 +1,6 @@
 # LedgerXtR
 
-Modern, single-page informational website for **LedgerXtR** (independent accounting support led by Ze Ching Oh).
+Modern, single-page informational website for **LedgerXtR** (bookkeeping and financial support for growing businesses).
 
 ## Tech
 

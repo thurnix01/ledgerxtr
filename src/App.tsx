@@ -665,18 +665,17 @@ function App() {
             <p className="sectionKicker">About</p>
             <h2 className="sectionTitle">Who we are.</h2>
             <p className="sectionLead">
-              LedgerXtR is an independent bookkeeping and accounting support practice led by Ze Ching
-              Oh. Based in Madison, Wisconsin, we help small business owners stay organized, understand
-              their numbers, and feel confident about their finances.
+              LedgerXtR provides bookkeeping and financial support services for growing businesses that
+              need reliable oversight without hiring full-time staff.
             </p>
             <p className="sectionLead">
-              With years of hands-on accounting and bookkeeping experience, we keep things practical:
-              accurate books, consistent reconciliations, and clear monthly reporting—delivered
-              virtually so you can work with us from anywhere.
+              Our services focus on accurate bookkeeping, reconciliations, and clear monthly financial
+              reporting to help clients make informed decisions and stay prepared year-round. Services are
+              provided virtually from Madison, Wisconsin.
             </p>
             <p className="sectionLead">
-              We do not file taxes. Instead, we provide clean, tax-ready financials and coordinate
-              with your CPA or tax preparer so year-end is smooth and efficient.
+              We do not offer tax preparation; instead, we deliver organized, tax-ready financials and
+              coordinate with your CPA or tax professional for an efficient year-end close.
             </p>
           </div>
         </section>
