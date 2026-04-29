@@ -158,12 +158,23 @@ function App() {
         status: 'new',
       }
 
-      const { error } = await supabase.from('ledgerxtr_call_requests').insert([payload])
+      console.log('LedgerXtR form payload:', payload)
+
+      const { data, error } = await supabase
+        .from('ledgerxtr_call_requests')
+        .insert([payload])
+        .select()
 
       if (error) {
-        console.error('Supabase insert error:', error)
-        throw error
+        console.error('LedgerXtR Supabase insert error:', error)
+        setSubmitError(
+          error.message ||
+            'Something went wrong sending your request. Please try again, or email us at info@ledgerxtr.com.',
+        )
+        return
       }
+
+      console.log('LedgerXtR Supabase insert success:', data)
 
       setSubmitted(true)
       setForm({
