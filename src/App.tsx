@@ -5,7 +5,7 @@ import clarityPhoto from './images/image_03.jpg'
 import { supabase } from './lib/supabaseClient'
 
 const BOOKING_URL =
-  'https://outlook.office.com/bookwithme/user/f605dc552bc64fc192526c3c83792ea3@ledgerxtr.com/meetingtype/_FgRgTaOQEyk_G3rlVZV7w2?anonymous&ismsaljsauthenabled&ep=mlink'
+  'https://bookings.cloud.microsoft/bookwithme/user/f605dc552bc64fc192526c3c83792ea3%40ledgerxtr.com/meetingtype/_FgRgTaOQEyk_G3rlVZV7w2?anonymous&ismsaljsauthenabled'
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? ''
 const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? ''
 
