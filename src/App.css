@@ -444,6 +444,10 @@
   align-items: start;
 }
 
+.bookingGrid.single {
+  grid-template-columns: 1fr;
+}
+
 @media (max-width: 960px) {
   .bookingGrid {
     grid-template-columns: 1fr;

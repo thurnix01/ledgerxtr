@@ -1,11 +1,8 @@
 import { useState } from 'react'
 import './App.css'
 import heroPhoto from './images/image_01.jpg'
-import clarityPhoto from './images/image_03.jpg'
 import { supabase } from './lib/supabaseClient'
 
-const BOOKING_URL =
-  'https://outlook.office.com/bookwithme/user/f605dc552bc64fc192526c3c83792ea3@ledgerxtr.com/meetingtype/OOSYHI-7oEG_3nYlNtAl-A2?anonymous&ismsaljsauthenabled&ep=mlink'
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? ''
 const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? ''
 
@@ -42,7 +39,6 @@ const SECTION_IDS = {
   whoWeHelp: 'who-we-help',
   process: 'process',
   about: 'about',
-  pricing: 'pricing',
   faq: 'faq',
   book: 'book-a-call',
 } as const
@@ -267,15 +263,6 @@ function App() {
                   Process
                 </a>
                 <a
-                  href={`#${SECTION_IDS.pricing}`}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    onNavClick(SECTION_IDS.pricing)
-                  }}
-                >
-                  Pricing
-                </a>
-                <a
                   href={`#${SECTION_IDS.about}`}
                   onClick={(e) => {
                     e.preventDefault()
@@ -355,15 +342,6 @@ function App() {
                 }}
               >
                 Process
-              </a>
-              <a
-                href={`#${SECTION_IDS.pricing}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  onNavClick(SECTION_IDS.pricing)
-                }}
-              >
-                Pricing
               </a>
               <a
                 href={`#${SECTION_IDS.about}`}
@@ -680,54 +658,6 @@ function App() {
           </div>
         </section>
 
-        <section id={SECTION_IDS.pricing} className="section" aria-label="Pricing">
-          <div className="container">
-            <p className="sectionKicker">Pricing</p>
-            <h2 className="sectionTitle">Simple, transparent monthly packages.</h2>
-            <p className="sectionLead">
-              Pricing depends on your transaction volume and the services you need. We’ll recommend a
-              package after a quick consultation—no hidden fees.
-            </p>
-
-            <div className="pricingWrap">
-              <div className="pricingMedia" aria-label="Financial organization illustration">
-                <img
-                  className="pricingPhoto"
-                  src={clarityPhoto}
-                  alt="Organized desk with laptop and financial documents"
-                  loading="lazy"
-                />
-              </div>
-
-              <div className="grid cols3 cardGrid" role="list" aria-label="Pricing tiers">
-                {[
-                  {
-                    title: 'Starter',
-                    body: 'Monthly bookkeeping basics: categorization, reconciliation, and core reporting.',
-                  },
-                  {
-                    title: 'Growth',
-                    body: 'Adds deeper reporting support and monthly review to improve clarity and consistency.',
-                  },
-                  {
-                    title: 'Full Support',
-                    body: 'For complex needs—can include cleanup/catch-up, payroll coordination, and add-ons.',
-                  },
-                ].map((tier) => (
-                  <div className="card" role="listitem" key={tier.title}>
-                    <h3 className="cardTitle">{tier.title}</h3>
-                    <p className="cardBody">{tier.body}</p>
-                    <p className="hintText">
-                      Custom quotes available for QuickBooks setup, cleanup/catch-up, payroll, and add-ons
-                      (e.g., job costing).
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section id={SECTION_IDS.faq} className="section sectionAlt" aria-label="Frequently asked questions">
           <div className="container">
             <p className="sectionKicker">FAQ</p>
@@ -773,31 +703,9 @@ function App() {
               Schedule a discovery call, or send a request below and we’ll follow up.
             </p>
 
-            <div className="bookingGrid">
-              <div className="panel" aria-label="Schedule on Microsoft Bookings">
-                <h3 className="panelTitle">Option A: Schedule on Microsoft Bookings</h3>
-                <p className="panelBody">
-                  Book time to connect. You’ll be redirected to Microsoft Bookings in a new tab.
-                </p>
-                <a
-                  className="btn btnPrimary"
-                  href={BOOKING_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Schedule on Microsoft Bookings"
-                >
-                  Schedule on Microsoft Bookings
-                </a>
-                <p className="hintText">
-                  Having trouble? Use this direct link:{' '}
-                  <a className="inlineLink" href={BOOKING_URL} target="_blank" rel="noreferrer">
-                    Open booking page
-                  </a>
-                </p>
-              </div>
-
+            <div className="bookingGrid single">
               <div className="panel" aria-label="Request a call form">
-                <h3 className="panelTitle">Option B: Request a Call</h3>
+                <h3 className="panelTitle">Request a Call</h3>
                 <p className="panelBody">
                   Tell us what you need. We’ll follow up by email to confirm next steps.
                 </p>
@@ -1010,7 +918,7 @@ function App() {
             <div>
               <h3 className="footerTitle">LedgerXtR</h3>
               <p className="footerText">
-                Independent bookkeeping and accounting support for growing businesses and nonprofit
+                Independent bookkeeping and financial support practice for growing businesses and nonprofit
                 organizations—focused on clean records, clear reporting, and tax-ready books.
               </p>
               <p className="finePrint">
@@ -1027,7 +935,6 @@ function App() {
                 { label: 'Services', id: SECTION_IDS.services },
                 { label: 'Who We Help', id: SECTION_IDS.whoWeHelp },
                 { label: 'Process', id: SECTION_IDS.process },
-                { label: 'Pricing', id: SECTION_IDS.pricing },
                 { label: 'About', id: SECTION_IDS.about },
                 { label: 'Book a Call', id: SECTION_IDS.book },
               ].map((l) => (
