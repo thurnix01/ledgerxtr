@@ -18,6 +18,20 @@ type ServiceNeeded =
   | 'Tax-Ready Books'
   | 'Accounting System Setup'
 
+type BookkeepingMethod = 'QuickBooks Online' | 'Excel / Google Sheets' | 'Bank statements only' | 'Not sure'
+type AccountsSeparated = 'Yes' | 'No' | 'Partially'
+type BooksUpToDate = 'Yes (current)' | 'Behind 1–3 months' | 'Behind 4–12 months' | 'More than a year / not sure'
+type BiggestFrustration =
+  | 'Staying organized'
+  | 'Knowing profit / cash flow'
+  | 'Catching up / cleanup'
+  | 'Payroll'
+  | 'Sales tax'
+  | 'Working with my CPA / tax preparer'
+  | 'Other'
+type HelpType = 'Monthly ongoing' | 'Cleanup first' | 'Not sure'
+type Industry = 'Contractor' | 'Service business' | 'Retail' | 'Nonprofit' | 'Other'
+
 type FormState = {
   fullName: string
   orgName: string
@@ -27,6 +41,13 @@ type FormState = {
   servicesNeeded: Record<ServiceNeeded, boolean>
   timeframe: MeetingTimeframe
   message: string
+  bookkeepingMethod: BookkeepingMethod
+  accountsSeparated: AccountsSeparated
+  booksUpToDate: BooksUpToDate
+  biggestFrustration: BiggestFrustration
+  frustrationOther: string
+  helpType: HelpType
+  industry: Industry
 }
 
 type FormErrors = Partial<Record<keyof FormState, string>> & {
@@ -94,6 +115,13 @@ function App() {
     },
     timeframe: 'Flexible',
     message: '',
+    bookkeepingMethod: 'Not sure',
+    accountsSeparated: 'Partially',
+    booksUpToDate: 'More than a year / not sure',
+    biggestFrustration: 'Staying organized',
+    frustrationOther: '',
+    helpType: 'Not sure',
+    industry: 'Service business',
   })
 
   function onNavClick(id: string) {
@@ -150,6 +178,15 @@ function App() {
         preferred_timeframe: form.timeframe,
         services_needed: servicesNeeded,
         message: form.message.trim(),
+        bookkeeping_method: form.bookkeepingMethod,
+        accounts_separated: form.accountsSeparated,
+        books_up_to_date: form.booksUpToDate,
+        biggest_frustration:
+          form.biggestFrustration === 'Other'
+            ? `Other: ${form.frustrationOther.trim() || 'Not specified'}`
+            : form.biggestFrustration,
+        help_type: form.helpType,
+        industry: form.industry,
         source: 'ledgerxtr.com',
         status: 'new',
       }
@@ -190,6 +227,13 @@ function App() {
         },
         timeframe: 'Flexible',
         message: '',
+        bookkeepingMethod: 'Not sure',
+        accountsSeparated: 'Partially',
+        booksUpToDate: 'More than a year / not sure',
+        biggestFrustration: 'Staying organized',
+        frustrationOther: '',
+        helpType: 'Not sure',
+        industry: 'Service business',
       })
       setErrors({})
     } catch (err) {
@@ -879,6 +923,157 @@ function App() {
                       <div className="errorText">{errors.servicesNeeded}</div>
                     ) : null}
                   </div>
+
+                  <details className="intakeDetails">
+                    <summary className="intakeSummary">
+                      Optional: a few quick questions to help us prepare
+                    </summary>
+                    <div className="intakeBody">
+                      <div className="fieldRow">
+                        <div>
+                          <label htmlFor="bookkeepingMethod">How are you currently tracking income/expenses?</label>
+                          <select
+                            id="bookkeepingMethod"
+                            name="bookkeepingMethod"
+                            value={form.bookkeepingMethod}
+                            onChange={(e) =>
+                              setForm((p) => ({
+                                ...p,
+                                bookkeepingMethod: e.target.value as BookkeepingMethod,
+                              }))
+                            }
+                          >
+                            <option>QuickBooks Online</option>
+                            <option>Excel / Google Sheets</option>
+                            <option>Bank statements only</option>
+                            <option>Not sure</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label htmlFor="booksUpToDate">Are your books up to date?</label>
+                          <select
+                            id="booksUpToDate"
+                            name="booksUpToDate"
+                            value={form.booksUpToDate}
+                            onChange={(e) =>
+                              setForm((p) => ({
+                                ...p,
+                                booksUpToDate: e.target.value as BooksUpToDate,
+                              }))
+                            }
+                          >
+                            <option>Yes (current)</option>
+                            <option>Behind 1–3 months</option>
+                            <option>Behind 4–12 months</option>
+                            <option>More than a year / not sure</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="fieldRow">
+                        <div>
+                          <label htmlFor="accountsSeparated">Do you separate business and personal accounts?</label>
+                          <select
+                            id="accountsSeparated"
+                            name="accountsSeparated"
+                            value={form.accountsSeparated}
+                            onChange={(e) =>
+                              setForm((p) => ({
+                                ...p,
+                                accountsSeparated: e.target.value as AccountsSeparated,
+                              }))
+                            }
+                          >
+                            <option>Yes</option>
+                            <option>No</option>
+                            <option>Partially</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label htmlFor="helpType">What kind of help are you looking for?</label>
+                          <select
+                            id="helpType"
+                            name="helpType"
+                            value={form.helpType}
+                            onChange={(e) =>
+                              setForm((p) => ({
+                                ...p,
+                                helpType: e.target.value as HelpType,
+                              }))
+                            }
+                          >
+                            <option>Monthly ongoing</option>
+                            <option>Cleanup first</option>
+                            <option>Not sure</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="fieldRow">
+                        <div>
+                          <label htmlFor="biggestFrustration">What’s most frustrating right now?</label>
+                          <select
+                            id="biggestFrustration"
+                            name="biggestFrustration"
+                            value={form.biggestFrustration}
+                            onChange={(e) =>
+                              setForm((p) => ({
+                                ...p,
+                                biggestFrustration: e.target.value as BiggestFrustration,
+                              }))
+                            }
+                          >
+                            <option>Staying organized</option>
+                            <option>Knowing profit / cash flow</option>
+                            <option>Catching up / cleanup</option>
+                            <option>Payroll</option>
+                            <option>Sales tax</option>
+                            <option>Working with my CPA / tax preparer</option>
+                            <option>Other</option>
+                          </select>
+                          {form.biggestFrustration === 'Other' ? (
+                            <div style={{ marginTop: 10 }}>
+                              <label htmlFor="frustrationOther">Tell us a little more</label>
+                              <input
+                                id="frustrationOther"
+                                name="frustrationOther"
+                                value={form.frustrationOther}
+                                onChange={(e) =>
+                                  setForm((p) => ({
+                                    ...p,
+                                    frustrationOther: e.target.value,
+                                  }))
+                                }
+                              />
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div>
+                          <label htmlFor="industry">Industry</label>
+                          <select
+                            id="industry"
+                            name="industry"
+                            value={form.industry}
+                            onChange={(e) =>
+                              setForm((p) => ({
+                                ...p,
+                                industry: e.target.value as Industry,
+                              }))
+                            }
+                          >
+                            <option>Contractor</option>
+                            <option>Service business</option>
+                            <option>Retail</option>
+                            <option>Nonprofit</option>
+                            <option>Other</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
 
                   <div>
                     <label htmlFor="message">Message *</label>
