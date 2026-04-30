@@ -7,47 +7,40 @@ const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?
 const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? ''
 
 type OrgType = 'Small Business' | 'Nonprofit' | 'Service Company' | 'Other'
-type MeetingTimeframe = 'This week' | 'Next week' | 'Flexible'
 
 type ServiceNeeded =
-  | 'Bookkeeping'
-  | 'Payroll Support'
-  | 'Sales Tax Organization'
-  | 'Nonprofit Accounting Support'
-  | 'Financial Reporting'
-  | 'Tax-Ready Books'
-  | 'Accounting System Setup'
+  | 'Monthly bookkeeping'
+  | 'Bank/credit card reconciliations'
+  | 'Financial reporting'
+  | 'Cleanup / catch-up bookkeeping'
+  | 'Accounts payable (Bill.com)'
+  | 'Not sure / need guidance'
 
-type BookkeepingMethod = 'QuickBooks Online' | 'Excel / Google Sheets' | 'Bank statements only' | 'Not sure'
-type AccountsSeparated = 'Yes' | 'No' | 'Partially'
-type BooksUpToDate = 'Yes (current)' | 'Behind 1–3 months' | 'Behind 4–12 months' | 'More than a year / not sure'
-type BiggestFrustration =
-  | 'Staying organized'
-  | 'Knowing profit / cash flow'
-  | 'Catching up / cleanup'
-  | 'Payroll'
-  | 'Sales tax'
-  | 'Working with my CPA / tax preparer'
-  | 'Other'
-type HelpType = 'Monthly ongoing' | 'Cleanup first' | 'Not sure'
-type Industry = 'Contractor' | 'Service business' | 'Retail' | 'Nonprofit' | 'Other'
+type YearsInBusiness = 'Just starting' | '0–2 years' | '3–5 years' | '5+ years' | ''
+type AccountingSoftware = 'QuickBooks Online' | 'Other' | 'Not currently using one'
+type BooksStatus =
+  | 'Up to date'
+  | 'A few months behind'
+  | 'Several months behind'
+  | 'Need full cleanup'
+type StartTimeline = 'As soon as possible' | 'Within 1 month' | 'Just exploring'
+type TransactionVolume = 'Low (<100 transactions)' | 'Medium (100–300)' | 'High (300+)' | ''
+type PreferredNextStep = 'Email follow-up' | 'Schedule a call' | 'Not sure yet' | ''
 
 type FormState = {
   fullName: string
-  orgName: string
   email: string
-  phone: string
+  businessName: string
   orgType: OrgType
+  industry: string
+  yearsInBusiness: YearsInBusiness
   servicesNeeded: Record<ServiceNeeded, boolean>
-  timeframe: MeetingTimeframe
-  message: string
-  bookkeepingMethod: BookkeepingMethod
-  accountsSeparated: AccountsSeparated
-  booksUpToDate: BooksUpToDate
-  biggestFrustration: BiggestFrustration
-  frustrationOther: string
-  helpType: HelpType
-  industry: Industry
+  accountingSoftware: AccountingSoftware
+  booksStatus: BooksStatus
+  startTimeline: StartTimeline
+  transactionVolume: TransactionVolume
+  additionalNotes: string
+  preferredNextStep: PreferredNextStep
 }
 
 type FormErrors = Partial<Record<keyof FormState, string>> & {
@@ -100,28 +93,25 @@ function App() {
   const [errors, setErrors] = useState<FormErrors>({})
   const [form, setForm] = useState<FormState>({
     fullName: '',
-    orgName: '',
     email: '',
-    phone: '',
+    businessName: '',
     orgType: 'Small Business',
+    industry: '',
+    yearsInBusiness: '',
     servicesNeeded: {
-      Bookkeeping: false,
-      'Payroll Support': false,
-      'Sales Tax Organization': false,
-      'Nonprofit Accounting Support': false,
-      'Financial Reporting': false,
-      'Tax-Ready Books': false,
-      'Accounting System Setup': false,
+      'Monthly bookkeeping': false,
+      'Bank/credit card reconciliations': false,
+      'Financial reporting': false,
+      'Cleanup / catch-up bookkeeping': false,
+      'Accounts payable (Bill.com)': false,
+      'Not sure / need guidance': false,
     },
-    timeframe: 'Flexible',
-    message: '',
-    bookkeepingMethod: 'Not sure',
-    accountsSeparated: 'Partially',
-    booksUpToDate: 'More than a year / not sure',
-    biggestFrustration: 'Staying organized',
-    frustrationOther: '',
-    helpType: 'Not sure',
-    industry: 'Service business',
+    accountingSoftware: 'QuickBooks Online',
+    booksStatus: 'Need full cleanup',
+    startTimeline: 'Just exploring',
+    transactionVolume: '',
+    additionalNotes: '',
+    preferredNextStep: '',
   })
 
   function onNavClick(id: string) {
@@ -133,15 +123,17 @@ function App() {
     const nextErrors: FormErrors = {}
 
     if (!next.fullName.trim()) nextErrors.fullName = 'Please enter your full name.'
-    if (!next.orgName.trim())
-      nextErrors.orgName = 'Please enter your business / organization name.'
     if (!next.email.trim()) nextErrors.email = 'Please enter your email.'
     else if (!isValidEmail(next.email)) nextErrors.email = 'Please enter a valid email.'
 
     const servicesPicked = Object.values(next.servicesNeeded).some(Boolean)
     if (!servicesPicked) nextErrors.servicesNeeded = 'Select at least one service.'
 
-    if (!next.message.trim()) nextErrors.message = 'Please add a short message.'
+    if (!next.orgType.trim()) nextErrors.orgType = 'Please select an organization type.'
+    if (!next.accountingSoftware.trim())
+      nextErrors.accountingSoftware = 'Please select your accounting software.'
+    if (!next.booksStatus.trim()) nextErrors.booksStatus = 'Please select a books status.'
+    if (!next.startTimeline.trim()) nextErrors.startTimeline = 'Please select a start timeframe.'
 
     return nextErrors
   }
@@ -171,22 +163,22 @@ function App() {
       // Supabase insert happens here.
       const payload = {
         full_name: form.fullName.trim(),
-        business_name: form.orgName.trim(),
         email: form.email.trim(),
-        phone: form.phone.trim(),
         organization_type: form.orgType,
-        preferred_timeframe: form.timeframe,
         services_needed: servicesNeeded,
-        message: form.message.trim(),
-        bookkeeping_method: form.bookkeepingMethod,
-        accounts_separated: form.accountsSeparated,
-        books_up_to_date: form.booksUpToDate,
-        biggest_frustration:
-          form.biggestFrustration === 'Other'
-            ? `Other: ${form.frustrationOther.trim() || 'Not specified'}`
-            : form.biggestFrustration,
-        help_type: form.helpType,
-        industry: form.industry,
+        business_name: form.businessName.trim() || null,
+        industry: form.industry.trim() || null,
+        years_in_business: form.yearsInBusiness || null,
+        accounting_software: form.accountingSoftware,
+        books_status: form.booksStatus,
+        start_timeline: form.startTimeline,
+        transaction_volume: form.transactionVolume || null,
+        additional_notes: form.additionalNotes.trim() || null,
+        preferred_next_step: form.preferredNextStep || null,
+        // Back-compat columns (if still present / required in your table):
+        preferred_timeframe: form.startTimeline,
+        message: form.additionalNotes.trim() || '',
+        phone: null,
         source: 'ledgerxtr.com',
         status: 'new',
       }
@@ -212,28 +204,25 @@ function App() {
       setSubmitted(true)
       setForm({
         fullName: '',
-        orgName: '',
         email: '',
-        phone: '',
+        businessName: '',
         orgType: 'Small Business',
+        industry: '',
+        yearsInBusiness: '',
         servicesNeeded: {
-          Bookkeeping: false,
-          'Payroll Support': false,
-          'Sales Tax Organization': false,
-          'Nonprofit Accounting Support': false,
-          'Financial Reporting': false,
-          'Tax-Ready Books': false,
-          'Accounting System Setup': false,
+          'Monthly bookkeeping': false,
+          'Bank/credit card reconciliations': false,
+          'Financial reporting': false,
+          'Cleanup / catch-up bookkeeping': false,
+          'Accounts payable (Bill.com)': false,
+          'Not sure / need guidance': false,
         },
-        timeframe: 'Flexible',
-        message: '',
-        bookkeepingMethod: 'Not sure',
-        accountsSeparated: 'Partially',
-        booksUpToDate: 'More than a year / not sure',
-        biggestFrustration: 'Staying organized',
-        frustrationOther: '',
-        helpType: 'Not sure',
-        industry: 'Service business',
+        accountingSoftware: 'QuickBooks Online',
+        booksStatus: 'Need full cleanup',
+        startTimeline: 'Just exploring',
+        transactionVolume: '',
+        additionalNotes: '',
+        preferredNextStep: '',
       })
       setErrors({})
     } catch (err) {
@@ -751,7 +740,10 @@ function App() {
               <div className="panel" aria-label="Request a call form">
                 <h3 className="panelTitle">Request a Call</h3>
                 <p className="panelBody">
-                  Tell us what you need. We’ll follow up by email to confirm next steps.
+                  Thank you for your interest in LedgerXtR.
+                  <br />
+                  Please complete the short form below so we can better understand your needs. We will
+                  follow up by email.
                 </p>
 
                 {submitted ? (
@@ -766,6 +758,9 @@ function App() {
                 ) : null}
 
                 <form className="form" onSubmit={onSubmit} noValidate>
+                  <h4 className="panelTitle" style={{ marginTop: 4 }}>
+                    Contact Information
+                  </h4>
                   <div className="fieldRow">
                     <div>
                       <label htmlFor="fullName">Full name *</label>
@@ -791,31 +786,6 @@ function App() {
                     </div>
 
                     <div>
-                      <label htmlFor="orgName">Business / Organization name *</label>
-                      <input
-                        id="orgName"
-                        name="orgName"
-                        autoComplete="organization"
-                        value={form.orgName}
-                        onChange={(e) =>
-                          setForm((p) => ({
-                            ...p,
-                            orgName: e.target.value,
-                          }))
-                        }
-                        aria-invalid={Boolean(errors.orgName)}
-                        aria-describedby={errors.orgName ? 'orgName-error' : undefined}
-                      />
-                      {errors.orgName ? (
-                        <div className="errorText" id="orgName-error">
-                          {errors.orgName}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="fieldRow">
-                    <div>
                       <label htmlFor="email">Email *</label>
                       <input
                         id="email"
@@ -838,27 +808,27 @@ function App() {
                         </div>
                       ) : null}
                     </div>
-
-                    <div>
-                      <label htmlFor="phone">Phone</label>
-                      <input
-                        id="phone"
-                        name="phone"
-                        autoComplete="tel"
-                        value={form.phone}
-                        onChange={(e) =>
-                          setForm((p) => ({
-                            ...p,
-                            phone: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
                   </div>
 
                   <div className="fieldRow">
                     <div>
-                      <label htmlFor="orgType">Organization type</label>
+                      <label htmlFor="businessName">Business name</label>
+                      <input
+                        id="businessName"
+                        name="businessName"
+                        autoComplete="organization"
+                        value={form.businessName}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            businessName: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="orgType">Type of organization *</label>
                       <select
                         id="orgType"
                         name="orgType"
@@ -869,36 +839,149 @@ function App() {
                             orgType: e.target.value as OrgType,
                           }))
                         }
+                        aria-invalid={Boolean(errors.orgType)}
                       >
                         <option>Small Business</option>
                         <option>Nonprofit</option>
-                        <option>Service Company</option>
+                        <option>Sole Proprietor</option>
                         <option>Other</option>
                       </select>
+                      {errors.orgType ? <div className="errorText">{errors.orgType}</div> : null}
                     </div>
+                  </div>
 
+                  <div className="fieldRow">
                     <div>
-                      <label htmlFor="timeframe">Preferred meeting timeframe</label>
-                      <select
-                        id="timeframe"
-                        name="timeframe"
-                        value={form.timeframe}
+                      <label htmlFor="industry">Industry</label>
+                      <input
+                        id="industry"
+                        name="industry"
+                        value={form.industry}
                         onChange={(e) =>
                           setForm((p) => ({
                             ...p,
-                            timeframe: e.target.value as MeetingTimeframe,
+                            industry: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="yearsInBusiness">How long have you been in business?</label>
+                      <select
+                        id="yearsInBusiness"
+                        name="yearsInBusiness"
+                        value={form.yearsInBusiness}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            yearsInBusiness: e.target.value as YearsInBusiness,
                           }))
                         }
                       >
-                        <option>This week</option>
-                        <option>Next week</option>
-                        <option>Flexible</option>
+                        <option value="">Select…</option>
+                        <option>Just starting</option>
+                        <option>0–2 years</option>
+                        <option>3–5 years</option>
+                        <option>5+ years</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="fieldRow">
+                    <div>
+                      <label htmlFor="accountingSoftware">Are you currently using accounting software? *</label>
+                      <select
+                        id="accountingSoftware"
+                        name="accountingSoftware"
+                        value={form.accountingSoftware}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            accountingSoftware: e.target.value as AccountingSoftware,
+                          }))
+                        }
+                        aria-invalid={Boolean(errors.accountingSoftware)}
+                      >
+                        <option>QuickBooks Online</option>
+                        <option>Other</option>
+                        <option>Not currently using one</option>
+                      </select>
+                      {errors.accountingSoftware ? (
+                        <div className="errorText">{errors.accountingSoftware}</div>
+                      ) : null}
+                    </div>
+
+                    <div>
+                      <label htmlFor="booksStatus">How up to date are your books? *</label>
+                      <select
+                        id="booksStatus"
+                        name="booksStatus"
+                        value={form.booksStatus}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            booksStatus: e.target.value as BooksStatus,
+                          }))
+                        }
+                        aria-invalid={Boolean(errors.booksStatus)}
+                      >
+                        <option>Up to date</option>
+                        <option>A few months behind</option>
+                        <option>Several months behind</option>
+                        <option>Need full cleanup</option>
+                      </select>
+                      {errors.booksStatus ? <div className="errorText">{errors.booksStatus}</div> : null}
+                    </div>
+                  </div>
+
+                  <div className="fieldRow">
+                    <div>
+                      <label htmlFor="startTimeline">When are you looking to get started? *</label>
+                      <select
+                        id="startTimeline"
+                        name="startTimeline"
+                        value={form.startTimeline}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            startTimeline: e.target.value as StartTimeline,
+                          }))
+                        }
+                        aria-invalid={Boolean(errors.startTimeline)}
+                      >
+                        <option>As soon as possible</option>
+                        <option>Within 1 month</option>
+                        <option>Just exploring</option>
+                      </select>
+                      {errors.startTimeline ? (
+                        <div className="errorText">{errors.startTimeline}</div>
+                      ) : null}
+                    </div>
+
+                    <div>
+                      <label htmlFor="transactionVolume">Estimated monthly transaction volume</label>
+                      <select
+                        id="transactionVolume"
+                        name="transactionVolume"
+                        value={form.transactionVolume}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            transactionVolume: e.target.value as TransactionVolume,
+                          }))
+                        }
+                      >
+                        <option value="">Select…</option>
+                        <option>Low (&lt;100 transactions)</option>
+                        <option>Medium (100–300)</option>
+                        <option>High (300+)</option>
                       </select>
                     </div>
                   </div>
 
                   <div>
-                    <label>Services needed *</label>
+                    <label>What services are you looking for? *</label>
                     <div className="checkboxGrid" role="group" aria-label="Services needed">
                       {(Object.keys(form.servicesNeeded) as ServiceNeeded[]).map((key) => (
                         <label className="checkItem" key={key}>
@@ -924,177 +1007,39 @@ function App() {
                     ) : null}
                   </div>
 
-                  <details className="intakeDetails">
-                    <summary className="intakeSummary">
-                      Optional: a few quick questions to help us prepare
-                    </summary>
-                    <div className="intakeBody">
-                      <div className="fieldRow">
-                        <div>
-                          <label htmlFor="bookkeepingMethod">How are you currently tracking income/expenses?</label>
-                          <select
-                            id="bookkeepingMethod"
-                            name="bookkeepingMethod"
-                            value={form.bookkeepingMethod}
-                            onChange={(e) =>
-                              setForm((p) => ({
-                                ...p,
-                                bookkeepingMethod: e.target.value as BookkeepingMethod,
-                              }))
-                            }
-                          >
-                            <option>QuickBooks Online</option>
-                            <option>Excel / Google Sheets</option>
-                            <option>Bank statements only</option>
-                            <option>Not sure</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label htmlFor="booksUpToDate">Are your books up to date?</label>
-                          <select
-                            id="booksUpToDate"
-                            name="booksUpToDate"
-                            value={form.booksUpToDate}
-                            onChange={(e) =>
-                              setForm((p) => ({
-                                ...p,
-                                booksUpToDate: e.target.value as BooksUpToDate,
-                              }))
-                            }
-                          >
-                            <option>Yes (current)</option>
-                            <option>Behind 1–3 months</option>
-                            <option>Behind 4–12 months</option>
-                            <option>More than a year / not sure</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="fieldRow">
-                        <div>
-                          <label htmlFor="accountsSeparated">Do you separate business and personal accounts?</label>
-                          <select
-                            id="accountsSeparated"
-                            name="accountsSeparated"
-                            value={form.accountsSeparated}
-                            onChange={(e) =>
-                              setForm((p) => ({
-                                ...p,
-                                accountsSeparated: e.target.value as AccountsSeparated,
-                              }))
-                            }
-                          >
-                            <option>Yes</option>
-                            <option>No</option>
-                            <option>Partially</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label htmlFor="helpType">What kind of help are you looking for?</label>
-                          <select
-                            id="helpType"
-                            name="helpType"
-                            value={form.helpType}
-                            onChange={(e) =>
-                              setForm((p) => ({
-                                ...p,
-                                helpType: e.target.value as HelpType,
-                              }))
-                            }
-                          >
-                            <option>Monthly ongoing</option>
-                            <option>Cleanup first</option>
-                            <option>Not sure</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="fieldRow">
-                        <div>
-                          <label htmlFor="biggestFrustration">What’s most frustrating right now?</label>
-                          <select
-                            id="biggestFrustration"
-                            name="biggestFrustration"
-                            value={form.biggestFrustration}
-                            onChange={(e) =>
-                              setForm((p) => ({
-                                ...p,
-                                biggestFrustration: e.target.value as BiggestFrustration,
-                              }))
-                            }
-                          >
-                            <option>Staying organized</option>
-                            <option>Knowing profit / cash flow</option>
-                            <option>Catching up / cleanup</option>
-                            <option>Payroll</option>
-                            <option>Sales tax</option>
-                            <option>Working with my CPA / tax preparer</option>
-                            <option>Other</option>
-                          </select>
-                          {form.biggestFrustration === 'Other' ? (
-                            <div style={{ marginTop: 10 }}>
-                              <label htmlFor="frustrationOther">Tell us a little more</label>
-                              <input
-                                id="frustrationOther"
-                                name="frustrationOther"
-                                value={form.frustrationOther}
-                                onChange={(e) =>
-                                  setForm((p) => ({
-                                    ...p,
-                                    frustrationOther: e.target.value,
-                                  }))
-                                }
-                              />
-                            </div>
-                          ) : null}
-                        </div>
-
-                        <div>
-                          <label htmlFor="industry">Industry</label>
-                          <select
-                            id="industry"
-                            name="industry"
-                            value={form.industry}
-                            onChange={(e) =>
-                              setForm((p) => ({
-                                ...p,
-                                industry: e.target.value as Industry,
-                              }))
-                            }
-                          >
-                            <option>Contractor</option>
-                            <option>Service business</option>
-                            <option>Retail</option>
-                            <option>Nonprofit</option>
-                            <option>Other</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </details>
-
                   <div>
-                    <label htmlFor="message">Message *</label>
+                    <label htmlFor="additionalNotes">Anything else you’d like us to know?</label>
                     <textarea
-                      id="message"
-                      name="message"
-                      value={form.message}
+                      id="additionalNotes"
+                      name="additionalNotes"
+                      value={form.additionalNotes}
                       onChange={(e) =>
                         setForm((p) => ({
                           ...p,
-                          message: e.target.value,
+                          additionalNotes: e.target.value,
                         }))
                       }
-                      aria-invalid={Boolean(errors.message)}
-                      aria-describedby={errors.message ? 'message-error' : undefined}
                     />
-                    {errors.message ? (
-                      <div className="errorText" id="message-error">
-                        {errors.message}
-                      </div>
-                    ) : null}
+                  </div>
+
+                  <div>
+                    <label htmlFor="preferredNextStep">Preferred next step</label>
+                    <select
+                      id="preferredNextStep"
+                      name="preferredNextStep"
+                      value={form.preferredNextStep}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          preferredNextStep: e.target.value as PreferredNextStep,
+                        }))
+                      }
+                    >
+                      <option value="">Select…</option>
+                      <option>Email follow-up</option>
+                      <option>Schedule a call</option>
+                      <option>Not sure yet</option>
+                    </select>
                   </div>
 
                   <button className="btn btnPrimary" type="submit" disabled={submitting}>
