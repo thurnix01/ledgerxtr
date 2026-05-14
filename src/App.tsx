@@ -596,7 +596,7 @@ function App() {
             <p className="sectionKicker">What you get</p>
             <h2 className="sectionTitle">Clarity, time back, and clean records.</h2>
             <p className="sectionLead">
-              Outsourcing your bookkeeping helps you stay focused on running your business while
+              Outsourcing your financial service helps you stay focused on running your business while
               keeping your financials accurate and up to date.
             </p>
 
@@ -609,6 +609,10 @@ function App() {
                 {
                   title: 'Gain Clarity',
                   body: 'Understand where your money is going and what your numbers mean each month.',
+                },
+                {
+                  title: 'Tax-Ready',
+                  body: 'Seamless coordination with your CPA or tax preparer—no last-minute scrambling.',
                 },
                 {
                   title: 'Reduce Stress',
