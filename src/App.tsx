@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import heroPhoto from './images/image_01.jpg'
 import { supabase } from './lib/supabaseClient'
@@ -6,7 +6,7 @@ import { supabase } from './lib/supabaseClient'
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? ''
 const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? ''
 
-type OrgType = 'Small Business' | 'Nonprofit' | 'Service Company' | 'Other'
+type OrgType = 'Small Business' | 'Nonprofit' | 'Sole Proprietor' | 'Other'
 
 type ServiceNeeded =
   | 'Monthly bookkeeping'
@@ -53,11 +53,40 @@ const SECTION_IDS = {
   whoWeHelp: 'who-we-help',
   process: 'process',
   about: 'about',
-  faq: 'faq',
-  book: 'book-a-call',
+  connect: 'lets-connect',
 } as const
 
+const LINKEDIN_URL = 'https://www.linkedin.com/company/117164280/'
+const ABSOLON_DESIGNS_URL = 'https://absolondesigns.com'
+
 type FaqItem = { q: string; a: string }
+
+const FAQ_ITEMS: FaqItem[] = [
+  {
+    q: 'How often will we communicate?',
+    a: 'Communication is designed to be simple, responsive, and consistent. Clients receive monthly reporting, ongoing email support, and the option for periodic check-ins as needed.',
+  },
+  {
+    q: 'Do you handle taxes or audit services?',
+    a: 'At this time, LedgerXtR specializes in bookkeeping and financial support services and does not offer tax preparation, audits, attestations, or other services requiring CPA firm licensure. We are happy to work alongside your CPA or tax preparer to help keep your financial records organized and up to date.',
+  },
+  {
+    q: 'I already use QuickBooks®. Why would I need bookkeeping support?',
+    a: 'Accounting software is only as effective as the information entered into it. LedgerXtR provides the oversight and organization needed to help keep your financial records accurate, consistent, and reliable.',
+  },
+  {
+    q: 'Does QuickBooks® Online replace bookkeeping support?',
+    a: 'Accounting software is a valuable tool, but it still requires knowledgeable oversight. LedgerXtR helps maintain accurate records through careful review, reconciliations, and consistent financial organization.',
+  },
+  {
+    q: 'Why is bookkeeping important even with automated software?',
+    a: 'Accounting software can automate processes, but it cannot replace thoughtful financial oversight. LedgerXtR helps ensure transactions are reviewed properly, accounts are reconciled accurately, and financial reports remain clear, reliable, and useful for managing your business.',
+  },
+  {
+    q: 'Do you provide tax-ready financial records?',
+    a: 'We focus on maintaining accurate, well-organized books and clear monthly reporting. While we do not prepare tax returns, we can coordinate with your CPA or tax preparer and help keep records in strong shape for their work.',
+  },
+]
 
 function Faq({ items }: { items: FaqItem[] }) {
   return (
@@ -86,6 +115,10 @@ function scrollToId(id: string) {
 }
 
 function App() {
+  const [faqOpen, setFaqOpen] = useState(
+    () => typeof window !== 'undefined' && window.location.hash === '#faq',
+  )
+  const [showBackTop, setShowBackTop] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -114,9 +147,59 @@ function App() {
     preferredNextStep: '',
   })
 
+  useEffect(() => {
+    const onHash = () => {
+      setFaqOpen(window.location.hash === '#faq')
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  useEffect(() => {
+    if (faqOpen) {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          closeFaq()
+        }
+      }
+      window.addEventListener('keydown', onKey)
+      return () => {
+        document.body.style.overflow = prev
+        window.removeEventListener('keydown', onKey)
+      }
+    }
+  }, [faqOpen])
+
+  useEffect(() => {
+    if (faqOpen) return
+    const onScroll = () => setShowBackTop(window.scrollY > 320)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [faqOpen])
+
+  function openFaq() {
+    setMobileOpen(false)
+    setFaqOpen(true)
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#faq`)
+    window.scrollTo(0, 0)
+  }
+
+  function closeFaq() {
+    setFaqOpen(false)
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+  }
+
   function onNavClick(id: string) {
     setMobileOpen(false)
-    scrollToId(id)
+    if (faqOpen) {
+      closeFaq()
+      window.setTimeout(() => scrollToId(id), 0)
+    } else {
+      scrollToId(id)
+    }
   }
 
   function validate(next: FormState): FormErrors {
@@ -158,6 +241,13 @@ function App() {
       (k) => form.servicesNeeded[k],
     )
 
+    const notes = form.additionalNotes.trim()
+    const servicesBlock =
+      servicesNeeded.length > 0
+        ? `Service needs:\n${servicesNeeded.map((s) => `• ${s}`).join('\n')}`
+        : ''
+    const combinedMessage = [notes, servicesBlock].filter(Boolean).join('\n\n')
+
     setSubmitting(true)
     try {
       // Supabase insert happens here.
@@ -177,7 +267,7 @@ function App() {
         preferred_next_step: form.preferredNextStep || null,
         // Back-compat columns (if still present / required in your table):
         preferred_timeframe: form.startTimeline,
-        message: form.additionalNotes.trim() || '',
+        message: combinedMessage || '',
         phone: null,
         source: 'ledgerxtr.com',
         status: 'new',
@@ -305,25 +395,25 @@ function App() {
                   About
                 </a>
                 <a
-                  href={`#${SECTION_IDS.book}`}
+                  href="#faq"
                   onClick={(e) => {
                     e.preventDefault()
-                    onNavClick(SECTION_IDS.book)
+                    openFaq()
                   }}
                 >
-                  Book a Call
+                  FAQ
                 </a>
               </div>
 
               <a
                 className="btn btnPrimary headerCta"
-                href={`#${SECTION_IDS.book}`}
+                href={`#${SECTION_IDS.connect}`}
                 onClick={(e) => {
                   e.preventDefault()
-                  onNavClick(SECTION_IDS.book)
+                  onNavClick(SECTION_IDS.connect)
                 }}
               >
-                Book a Consultation
+                Let&apos;s Connect
               </a>
 
               <button
@@ -386,23 +476,23 @@ function App() {
                 About
               </a>
               <a
-                href={`#${SECTION_IDS.book}`}
+                href="#faq"
                 onClick={(e) => {
                   e.preventDefault()
-                  onNavClick(SECTION_IDS.book)
+                  openFaq()
                 }}
               >
-                Book a Call
+                FAQ
               </a>
               <a
                 className="btn btnPrimary"
-                href={`#${SECTION_IDS.book}`}
+                href={`#${SECTION_IDS.connect}`}
                 onClick={(e) => {
                   e.preventDefault()
-                  onNavClick(SECTION_IDS.book)
+                  onNavClick(SECTION_IDS.connect)
                 }}
               >
-                Book a Consultation
+                Let&apos;s Connect
               </a>
             </div>
           ) : null}
@@ -414,24 +504,22 @@ function App() {
           <div className="container">
             <div className="heroGrid">
               <div>
-                <h1 className="heroTitle">
-                  Accounting Service That Gives You Peace of Mind
-                </h1>
+                <h1 className="heroTitle">Financial Clarity &amp; Peace of Mind</h1>
                 <p className="heroSubtitle">
-                  Professional, reliable, and friendly bookkeeping services for small businesses and
-                  individuals—specializing in virtual outsourced accounting services.
+                  Reliable and personalized virtual financial support for nonprofits, growing businesses, and
+                  individuals nationwide.
                 </p>
 
                 <div className="heroActions">
                   <a
                     className="btn btnPrimary"
-                    href={`#${SECTION_IDS.book}`}
+                    href={`#${SECTION_IDS.connect}`}
                     onClick={(e) => {
                       e.preventDefault()
-                      onNavClick(SECTION_IDS.book)
+                      onNavClick(SECTION_IDS.connect)
                     }}
                   >
-                    Book a Call
+                    Let&apos;s Connect
                   </a>
                   <a
                     className="btn btnSecondary"
@@ -447,10 +535,10 @@ function App() {
 
                 <ul className="trustList" aria-label="Trust notes">
                   {[
-                    'Monthly bookkeeping + reconciliations',
+                    'Monthly financial services + reconciliations',
                     'Cleanup / catch-up when books are behind',
                     'Payroll coordination and reporting support',
-                    'Tax-ready financials (coordination with your CPA)',
+                    'Clear monthly reporting and dependable financial visibility',
                   ].map((t) => (
                     <li className="trustItem" key={t}>
                       <span className="iconBadge" aria-hidden="true">
@@ -482,7 +570,7 @@ function App() {
                   <div className="heroMetric" aria-label="Highlights">
                     <div className="metricBox">
                       <p className="metricLabel">Focus</p>
-                      <p className="metricValue">Bookkeeping</p>
+                      <p className="metricValue">Financial services</p>
                     </div>
                     <div className="metricBox">
                       <p className="metricLabel">Support</p>
@@ -490,7 +578,7 @@ function App() {
                     </div>
                     <div className="metricBox">
                       <p className="metricLabel">Outcome</p>
-                      <p className="metricValue">Tax-ready financials</p>
+                      <p className="metricValue">Insight-driven reporting</p>
                     </div>
                     <div className="metricBox">
                       <p className="metricLabel">Delivery</p>
@@ -523,12 +611,16 @@ function App() {
                   body: 'Understand where your money is going and what your numbers mean each month.',
                 },
                 {
-                  title: 'Tax-Ready',
-                  body: 'Seamless coordination with your CPA or tax preparer—no last-minute scrambling.',
-                },
-                {
                   title: 'Reduce Stress',
                   body: 'Sleep better knowing your financials are accurate and current.',
+                },
+                {
+                  title: 'Commitment to Accuracy',
+                  body: 'We carefully review and categorize transactions to keep your financial records accurate, organized, and easy to understand.',
+                },
+                {
+                  title: 'Fair & Transparent Pricing',
+                  body: 'Professional financial support designed to deliver value without full-time overhead.',
                 },
               ].map((c) => (
                 <div className="card" role="listitem" key={c.title}>
@@ -545,14 +637,14 @@ function App() {
             <p className="sectionKicker">Services</p>
             <h2 className="sectionTitle">Comprehensive services, tailored to your needs.</h2>
             <p className="sectionLead">
-              From cleanup to monthly maintenance, LedgerXtR provides outsourced accounting services
-              for nonprofits and growing businesses.
+              From financial cleanup and monthly maintenance to accurate financial insights, LedgerXtR provides
+              dependable bookkeeping and financial support services for nonprofits, growing businesses, and individuals.
             </p>
 
             <div className="grid cols3 cardGrid" role="list">
               {[
                 {
-                  title: 'Monthly Accounting (Bookkeeping)',
+                  title: 'Monthly Financial Services',
                   body: 'Ongoing categorization, reconciliation, and reporting to keep books accurate and up to date.',
                 },
                 {
@@ -561,23 +653,19 @@ function App() {
                 },
                 {
                   title: 'QuickBooks Online Setup',
-                  body: 'Getting your accounting software set up correctly from day one. (Custom quote)',
+                  body: 'Getting your accounting software set up correctly from day one.',
                 },
                 {
                   title: 'Cleanup / Catch-up',
-                  body: 'Behind on your books? We’ll get everything organized and up to date. (Custom quote)',
+                  body: 'Behind on your books? We’ll get everything organized and up to date.',
                 },
                 {
                   title: 'Payroll Coordination',
-                  body: 'Help with payroll workflows, employee payment tracking, and related reporting support. (Custom quote)',
+                  body: 'Help with payroll workflows, employee payment tracking, and related reporting support.',
                 },
                 {
                   title: 'Strategy Session',
                   body: 'A 1:1 review to discuss financial health, priorities, and next steps.',
-                },
-                {
-                  title: 'Tax-Ready Coordination',
-                  body: 'We don’t file taxes, but we provide clean financials and coordinate with your CPA or tax preparer.',
                 },
               ].map((s) => (
                 <div className="card" role="listitem" key={s.title}>
@@ -594,8 +682,8 @@ function App() {
             <p className="sectionKicker">Who we help</p>
             <h2 className="sectionTitle">Who we work with.</h2>
             <p className="sectionLead">
-              We support nonprofits, foundations, freelancers, startups, and growing businesses
-              across a variety of industries—delivered virtually from Madison, Wisconsin.
+              We provide virtual support to nonprofits, foundations, freelancers, startups, and growing businesses
+              across a range of industries.
             </p>
 
             <div className="grid cols2 cardGrid" role="list">
@@ -629,10 +717,10 @@ function App() {
         <section id={SECTION_IDS.process} className="section" aria-label="Process">
           <div className="container">
             <p className="sectionKicker">Process</p>
-            <h2 className="sectionTitle">Simple, steady bookkeeping support.</h2>
+            <h2 className="sectionTitle">Simple. Flexible. Responsive. Client-focused.</h2>
             <p className="sectionLead">
-              A practical approach that keeps your books accurate, organized, and ready for your
-              CPA or tax preparer.
+              A practical, structured approach that keeps your books accurate and organized—delivering reliable
+              financial support designed to empower your business.
             </p>
 
             <div className="processSteps" role="list">
@@ -650,8 +738,8 @@ function App() {
                   body: 'Keep books updated, organized, reconciled, and ready for review.',
                 },
                 {
-                  title: 'Tax-Ready Coordination',
-                  body: 'Work alongside your current tax preparer or a trusted CPA partner when needed.',
+                  title: 'Reporting & Partnership',
+                  body: 'Deliver clear monthly reporting and stay available for questions as your needs evolve.',
                 },
               ].map((step, idx) => (
                 <div className="step" role="listitem" key={step.title}>
@@ -676,74 +764,53 @@ function App() {
             <p className="sectionKicker">About</p>
             <h2 className="sectionTitle">Who we are.</h2>
             <p className="sectionLead">
-              LedgerXtR provides bookkeeping and financial support services for growing businesses that
-              need reliable oversight without hiring full-time staff.
+              LedgerXtR delivers virtual financial support for growing businesses that need trusted oversight without
+              the cost of a full-time hire.
             </p>
             <p className="sectionLead">
-              Our services focus on accurate bookkeeping, reconciliations, and clear monthly financial
-              reporting to help clients make informed decisions and stay prepared year-round. Services are
-              provided virtually from Madison, Wisconsin.
+              We focus on maintaining accurate records, seamless reconciliations, and clear, insight-driven monthly
+              reporting—so you always have visibility and confidence in your financial position.
             </p>
             <p className="sectionLead">
-              We do not offer tax preparation; instead, we deliver organized, tax-ready financials and
-              coordinate with your CPA or tax professional for an efficient year-end close.
+              Our services are fully virtual, providing flexible, reliable support designed to scale with your business.
             </p>
           </div>
         </section>
 
-        <section id={SECTION_IDS.faq} className="section sectionAlt" aria-label="Frequently asked questions">
+        <section className="section" aria-label="Client testimonial">
           <div className="container">
-            <p className="sectionKicker">FAQ</p>
-            <h2 className="sectionTitle">Frequently asked questions.</h2>
-            <p className="sectionLead">Quick answers to common questions.</p>
-
-            <Faq
-              items={[
-                {
-                  q: "What's included in monthly outsourced accounting?",
-                  a: 'Monthly accounting includes transaction categorization, bank and credit card reconciliation, and basic financial reports. Higher tiers can include additional services like payroll coordination and specialized support.',
-                },
-                {
-                  q: 'Will you prepare and file my taxes?',
-                  a: 'No. We do not file taxes, but we provide clean, tax-ready financials and work closely with your CPA or tax preparer.',
-                },
-                {
-                  q: 'How often will we communicate?',
-                  a: 'We provide monthly reports and are available via email throughout the month. Many clients also choose a quick monthly check-in call to review their numbers.',
-                },
-                {
-                  q: 'Can you clean up or catch up my books?',
-                  a: 'Yes. If your books are behind or messy, we offer cleanup and catch-up services to bring everything current and accurate.',
-                },
-                {
-                  q: 'Do you offer virtual bookkeeping services?',
-                  a: 'Yes. Services are provided remotely, allowing us to work with clients anywhere.',
-                },
-                {
-                  q: 'Can you work with my existing CPA or accountant?',
-                  a: 'Absolutely. We regularly collaborate with CPAs and tax professionals to ensure smooth year-end and tax preparation.',
-                },
-              ]}
-            />
+            <p className="sectionKicker">Testimonial</p>
+            <figure className="testimonial">
+              <blockquote className="testimonialQuote">
+                <p>
+                  &ldquo;I recently connected with LedgerXtR over Zoom and was impressed by their professionalism and
+                  attention to detail. They help businesses stay organized and confident in their numbers through
+                  reliable bookkeeping and financial support. Highly recommend connecting with them if you&apos;re looking
+                  for dependable financial oversight.&rdquo;
+                </p>
+              </blockquote>
+              <figcaption className="testimonialCite">
+                Takeshi Yashima, Dream Builder Financial — City of Industry, CA
+              </figcaption>
+            </figure>
           </div>
         </section>
 
-        <section id={SECTION_IDS.book} className="section" aria-label="Book a call">
+        <section id={SECTION_IDS.connect} className="section sectionAlt" aria-label="Contact">
           <div className="container">
-            <p className="sectionKicker">Book a call</p>
-            <h2 className="sectionTitle">Let’s get your books under control.</h2>
+            <p className="sectionKicker">Let&apos;s Connect</p>
+            <h2 className="sectionTitle">Let&apos;s get your books under control.</h2>
             <p className="sectionLead">
-              Schedule a discovery call, or send a request below and we’ll follow up.
+              Thank you for your interest in LedgerXtR. Please complete the short form below so we can better understand
+              your needs. We will follow up by email to confirm the next steps.
             </p>
 
             <div className="bookingGrid single">
-              <div className="panel" aria-label="Request a call form">
-                <h3 className="panelTitle">Request a Call</h3>
+              <div className="panel" aria-label="Contact form">
+                <h3 className="panelTitle">Get in touch</h3>
                 <p className="panelBody">
-                  Thank you for your interest in LedgerXtR.
-                  <br />
-                  Please complete the short form below so we can better understand your needs. We will
-                  follow up by email.
+                  Use the form below to share a few details about your organization and the support you&apos;re looking
+                  for.
                 </p>
 
                 {submitted ? (
@@ -1043,7 +1110,7 @@ function App() {
                   </div>
 
                   <button className="btn btnPrimary" type="submit" disabled={submitting}>
-                    {submitting ? 'Sending…' : 'Request a Call'}
+                    {submitting ? 'Sending…' : "Let's Get Started"}
                   </button>
                 </form>
               </div>
@@ -1058,14 +1125,25 @@ function App() {
             <div>
               <h3 className="footerTitle">LedgerXtR</h3>
               <p className="footerText">
-                Independent bookkeeping and financial support practice for growing businesses and nonprofit
-                organizations—focused on clean records, clear reporting, and tax-ready books.
+                Independent financial support for growing businesses and nonprofit organizations—focused on clean
+                records, clear reporting, and dependable virtual partnership.
               </p>
               <p className="finePrint">
-                Email: <a href="mailto:info@ledgerxtr.com">info@ledgerxtr.com</a> · Domain:{' '}
+                Email: <a href="mailto:info@ledgerxtr.com">info@ledgerxtr.com</a> ·{' '}
                 <a href="https://ledgerxtr.com" target="_blank" rel="noreferrer">
                   ledgerxtr.com
                 </a>
+                {' · '}
+                <a href={LINKEDIN_URL} target="_blank" rel="noreferrer">
+                  LinkedIn
+                </a>
+              </p>
+              <p className="finePrint">
+                Developed by{' '}
+                <a href={ABSOLON_DESIGNS_URL} target="_blank" rel="noreferrer">
+                  Absolon Designs
+                </a>
+                .
               </p>
             </div>
 
@@ -1076,7 +1154,7 @@ function App() {
                 { label: 'Who We Help', id: SECTION_IDS.whoWeHelp },
                 { label: 'Process', id: SECTION_IDS.process },
                 { label: 'About', id: SECTION_IDS.about },
-                { label: 'Book a Call', id: SECTION_IDS.book },
+                { label: "Let's Connect", id: SECTION_IDS.connect },
               ].map((l) => (
                 <a
                   key={l.id}
@@ -1089,12 +1167,52 @@ function App() {
                   {l.label}
                 </a>
               ))}
+              <a
+                href="#faq"
+                onClick={(e) => {
+                  e.preventDefault()
+                  openFaq()
+                }}
+              >
+                FAQ
+              </a>
             </div>
           </div>
 
           <p className="finePrint">© {new Date().getFullYear()} LedgerXtR. All rights reserved.</p>
         </div>
       </footer>
+
+      {showBackTop && !faqOpen ? (
+        <button
+          type="button"
+          className="backToTop"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Back to top"
+        >
+          Back to top
+        </button>
+      ) : null}
+
+      {faqOpen ? (
+        <div
+          className="faqOverlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Frequently asked questions"
+        >
+          <div className="faqOverlayHeader">
+            <h2 className="faqOverlayTitle">Frequently asked questions</h2>
+            <button type="button" className="btn btnSecondary faqOverlayClose" onClick={closeFaq}>
+              Close
+            </button>
+          </div>
+          <div className="faqOverlayBody container">
+            <p className="sectionLead">Quick answers to common questions.</p>
+            <Faq items={FAQ_ITEMS} />
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
