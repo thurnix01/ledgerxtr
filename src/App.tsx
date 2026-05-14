@@ -781,22 +781,24 @@ function App() {
           </div>
         </section>
 
-        <section className="section" aria-label="Client testimonial">
+        <section className="section sectionTestimonial" aria-label="Client testimonial">
           <div className="container">
             <p className="sectionKicker">Testimonial</p>
-            <figure className="testimonial">
-              <blockquote className="testimonialQuote">
-                <p>
-                  &ldquo;I recently connected with LedgerXtR over Zoom and was impressed by their professionalism and
-                  attention to detail. They help businesses stay organized and confident in their numbers through
-                  reliable bookkeeping and financial support. Highly recommend connecting with them if you&apos;re looking
-                  for dependable financial oversight.&rdquo;
-                </p>
-              </blockquote>
-              <figcaption className="testimonialCite">
-                Takeshi Yashima, Dream Builder Financial — City of Industry, CA
-              </figcaption>
-            </figure>
+            <div className="testimonialBubble">
+              <figure className="testimonial">
+                <blockquote className="testimonialQuote">
+                  <p>
+                    &ldquo;I recently connected with LedgerXtR over Zoom and was impressed by their professionalism and
+                    attention to detail. They help businesses stay organized and confident in their numbers through
+                    reliable bookkeeping and financial support. Highly recommend connecting with them if you&apos;re
+                    looking for dependable financial oversight.&rdquo;
+                  </p>
+                </blockquote>
+                <figcaption className="testimonialCite">
+                  Takeshi Yashima, Dream Builder Financial — City of Industry, CA
+                </figcaption>
+              </figure>
+            </div>
           </div>
         </section>
 
@@ -817,11 +819,6 @@ function App() {
                   for.
                 </p>
 
-                {submitted ? (
-                  <div className="successBanner" role="status" aria-live="polite">
-                    Request received. We’ll follow up soon.
-                  </div>
-                ) : null}
                 {submitError ? (
                   <div className="errorText" role="status" aria-live="polite">
                     {submitError}
@@ -1112,6 +1109,12 @@ function App() {
                       <option>Not sure yet</option>
                     </select>
                   </div>
+
+                  {submitted ? (
+                    <div className="successBanner formSuccessBanner" role="status" aria-live="polite">
+                      Request received. We&apos;ll follow up soon.
+                    </div>
+                  ) : null}
 
                   <button className="btn btnPrimary" type="submit" disabled={submitting}>
                     {submitting ? 'Sending…' : "Let's Get Started"}

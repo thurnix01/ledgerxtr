@@ -611,6 +611,14 @@ textarea:focus {
   font-weight: 600;
 }
 
+.formSuccessBanner {
+  margin-top: 4px;
+  margin-bottom: 14px;
+  border-radius: 20px;
+  padding: 14px 16px;
+  text-align: center;
+}
+
 .footer {
   padding: 34px 0;
   border-top: 1px solid var(--border);
@@ -667,29 +675,50 @@ textarea:focus {
   font-size: 14px;
 }
 
-.testimonial {
-  margin: 0;
+.sectionTestimonial {
+  padding-bottom: 56px;
+}
+
+.testimonialBubble {
+  margin-top: 18px;
   max-width: 72ch;
+  border-radius: 26px;
+  border: 1px solid rgba(20, 184, 166, 0.28);
+  background: linear-gradient(
+    145deg,
+    rgba(20, 184, 166, 0.12) 0%,
+    rgba(255, 255, 255, 0.92) 42%,
+    rgba(37, 99, 235, 0.07) 100%
+  );
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  padding: clamp(22px, 4vw, 34px);
 }
 
-.testimonialQuote {
+.testimonialBubble .testimonial {
+  margin: 0;
+  max-width: none;
+}
+
+.testimonialBubble .testimonialCite {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(37, 99, 235, 0.12);
+  font-size: 15px;
+  color: var(--muted);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.testimonialBubble .testimonialQuote {
   margin: 0;
 }
 
-.testimonialQuote p {
+.testimonialBubble .testimonialQuote p {
   margin: 0;
   font-size: clamp(17px, 2.1vw, 20px);
   line-height: 1.55;
   color: var(--text);
   font-weight: 500;
-}
-
-.testimonialCite {
-  margin-top: 16px;
-  font-size: 15px;
-  color: var(--muted);
-  font-style: normal;
-  font-weight: 600;
 }
 
 .backToTop {
