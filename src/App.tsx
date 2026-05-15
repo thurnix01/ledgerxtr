@@ -1156,13 +1156,6 @@ function App() {
                   Instagram
                 </a>
               </p>
-              <p className="finePrint">
-                Developed by{' '}
-                <a href={ABSOLON_DESIGNS_URL} target="_blank" rel="noreferrer">
-                  Absolon Designs
-                </a>
-                .
-              </p>
             </div>
 
             <div aria-label="Footer links" className="footerLinks">
@@ -1197,7 +1190,15 @@ function App() {
             </div>
           </div>
 
-          <p className="finePrint">© {new Date().getFullYear()} LedgerXtR. All rights reserved.</p>
+          <p className="finePrint footerCopyrightRow">
+            © {new Date().getFullYear()} LedgerXtR. All rights reserved.
+            {' • '}
+            Developed by{' '}
+            <a href={ABSOLON_DESIGNS_URL} target="_blank" rel="noreferrer">
+              Absolon Designs
+            </a>
+            .
+          </p>
         </div>
       </footer>
 

@@ -675,6 +675,11 @@ textarea:focus {
   font-size: 14px;
 }
 
+.footerCopyrightRow {
+  margin-top: 22px;
+  line-height: 1.5;
+}
+
 .sectionTestimonial {
   padding-bottom: 56px;
 }
