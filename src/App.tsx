@@ -57,6 +57,9 @@ const SECTION_IDS = {
 } as const
 
 const LINKEDIN_URL = 'https://www.linkedin.com/company/117164280/'
+const FACEBOOK_URL = 'https://www.facebook.com/share/1NZCz3yG4Z/?mibextid=wwXIfr'
+const INSTAGRAM_URL =
+  'https://www.instagram.com/ledgerxtr?igsh=MW45eDlja21tajZlZA%3D%3D&utm_source=qr'
 const ABSOLON_DESIGNS_URL = 'https://absolondesigns.com'
 
 type FaqItem = { q: string; a: string }
@@ -1143,6 +1146,14 @@ function App() {
                 {' · '}
                 <a href={LINKEDIN_URL} target="_blank" rel="noreferrer">
                   LinkedIn
+                </a>
+                {' · '}
+                <a href={FACEBOOK_URL} target="_blank" rel="noreferrer">
+                  Facebook
+                </a>
+                {' · '}
+                <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">
+                  Instagram
                 </a>
               </p>
               <p className="finePrint">
