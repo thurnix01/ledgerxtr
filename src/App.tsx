@@ -346,8 +346,7 @@ function App() {
               }}
               aria-label="LedgerXtR Home"
             >
-              <span className="brandMark" aria-hidden="true" />
-              LedgerXtR
+              <img className="brandLogo" src="/main-logo.svg" alt="" width={144} height={34} />
             </a>
 
             <nav className="nav" aria-label="Site">
