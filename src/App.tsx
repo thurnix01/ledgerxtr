@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import heroPhoto from './images/image_01.jpg'
-import { supabase } from './lib/supabaseClient'
+import { buildContactFormPayload, submitContactForm } from './lib/submitContactForm'
 
-const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? ''
-const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? ''
+const N8N_WEBHOOK_URL = (import.meta.env.VITE_N8N_WEBHOOK_URL as string | undefined) ?? ''
 
 type OrgType = 'Small Business' | 'Nonprofit' | 'Sole Proprietor' | 'Other'
 
@@ -233,7 +232,7 @@ function App() {
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
-    if (!SUPABASE_URL.trim() || !SUPABASE_ANON_KEY.trim()) {
+    if (!N8N_WEBHOOK_URL.trim()) {
       setSubmitError(
         'Form delivery is not configured yet. Please try again later.',
       )
@@ -244,55 +243,27 @@ function App() {
       (k) => form.servicesNeeded[k],
     )
 
-    const notes = form.additionalNotes.trim()
-    const servicesBlock =
-      servicesNeeded.length > 0
-        ? `Service needs:\n${servicesNeeded.map((s) => `• ${s}`).join('\n')}`
-        : ''
-    const combinedMessage = [notes, servicesBlock].filter(Boolean).join('\n\n')
-
     setSubmitting(true)
     try {
-      // Supabase insert happens here.
-      const payload = {
-        full_name: form.fullName.trim(),
-        email: form.email.trim(),
-        organization_type: form.orgType,
-        services_needed: servicesNeeded,
-        business_name: form.businessName.trim() || null,
-        industry: form.industry.trim() || null,
-        years_in_business: form.yearsInBusiness || null,
-        accounting_software: form.accountingSoftware,
-        books_status: form.booksStatus,
-        start_timeline: form.startTimeline,
-        transaction_volume: form.transactionVolume || null,
-        additional_notes: form.additionalNotes.trim() || null,
-        preferred_next_step: form.preferredNextStep || null,
-        // Back-compat columns (if still present / required in your table):
-        preferred_timeframe: form.startTimeline,
-        message: combinedMessage || '',
-        phone: null,
-        source: 'ledgerxtr.com',
-        status: 'new',
-      }
+      const payload = buildContactFormPayload({
+        fullName: form.fullName,
+        email: form.email,
+        businessName: form.businessName,
+        orgType: form.orgType,
+        industry: form.industry,
+        yearsInBusiness: form.yearsInBusiness,
+        servicesNeeded,
+        accountingSoftware: form.accountingSoftware,
+        booksStatus: form.booksStatus,
+        startTimeline: form.startTimeline,
+        transactionVolume: form.transactionVolume,
+        additionalNotes: form.additionalNotes,
+        preferredNextStep: form.preferredNextStep,
+      })
 
       console.log('LedgerXtR form payload:', payload)
-
-      const { data, error } = await supabase
-        .from('ledgerxtr_call_requests')
-        .insert([payload])
-        .select()
-
-      if (error) {
-        console.error('LedgerXtR Supabase insert error:', error)
-        setSubmitError(
-          error.message ||
-            'Something went wrong sending your request. Please try again, or email us at info@ledgerxtr.com.',
-        )
-        return
-      }
-
-      console.log('LedgerXtR Supabase insert success:', data)
+      await submitContactForm(N8N_WEBHOOK_URL.trim(), payload)
+      console.log('LedgerXtR n8n webhook success')
 
       setSubmitted(true)
       setForm({
@@ -319,7 +290,7 @@ function App() {
       })
       setErrors({})
     } catch (err) {
-      console.error('[LedgerXtR] Booking request error', err)
+      console.error('[LedgerXtR] Contact form submit error', err)
       setSubmitError(
         'Something went wrong sending your request. Please try again, or email us at info@ledgerxtr.com.',
       )

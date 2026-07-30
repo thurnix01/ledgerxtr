@@ -1,0 +1,151 @@
+{
+  "name": "LedgerXtR Contact Form",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ledgerxtr-contact",
+        "responseMode": "onReceived",
+        "responseData": "firstEntryJson",
+        "options": {
+          "rawBody": true,
+          "allowedOrigins": "https://ledgerxtr.com,https://www.ledgerxtr.com,http://localhost:5173,http://127.0.0.1:5173"
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "ledgerxtr-contact"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst raw =\n  item.json.body ??\n  item.json.data ??\n  item.json;\n\nlet parsed = raw;\nif (typeof raw === 'string') {\n  try {\n    parsed = JSON.parse(raw);\n  } catch (error) {\n    throw new Error('Webhook body is not valid JSON');\n  }\n} else if (raw && typeof raw === 'object' && typeof raw.body === 'string') {\n  parsed = JSON.parse(raw.body);\n}\n\nconst services = Array.isArray(parsed.services_needed)\n  ? parsed.services_needed.join(', ')\n  : (parsed.services_needed_text || '');\n\nreturn [{\n  json: {\n    submitted_at: parsed.submitted_at || new Date().toISOString(),\n    full_name: parsed.full_name || '',\n    email: parsed.email || '',\n    business_name: parsed.business_name || '',\n    organization_type: parsed.organization_type || '',\n    industry: parsed.industry || '',\n    years_in_business: parsed.years_in_business || '',\n    accounting_software: parsed.accounting_software || '',\n    books_status: parsed.books_status || '',\n    start_timeline: parsed.start_timeline || '',\n    transaction_volume: parsed.transaction_volume || '',\n    services_needed: services,\n    preferred_next_step: parsed.preferred_next_step || '',\n    additional_notes: parsed.additional_notes || '',\n    message: parsed.message || '',\n    source: parsed.source || 'ledgerxtr.com',\n    status: parsed.status || 'new',\n  },\n}];"
+      },
+      "id": "parse-payload",
+      "name": "Parse Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REPLACE_WITH_GOOGLE_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Submitted At": "={{ $json.submitted_at }}",
+            "Full Name": "={{ $json.full_name }}",
+            "Email": "={{ $json.email }}",
+            "Business Name": "={{ $json.business_name }}",
+            "Organization Type": "={{ $json.organization_type }}",
+            "Industry": "={{ $json.industry }}",
+            "Years In Business": "={{ $json.years_in_business }}",
+            "Accounting Software": "={{ $json.accounting_software }}",
+            "Books Status": "={{ $json.books_status }}",
+            "Start Timeline": "={{ $json.start_timeline }}",
+            "Transaction Volume": "={{ $json.transaction_volume }}",
+            "Services Needed": "={{ $json.services_needed }}",
+            "Preferred Next Step": "={{ $json.preferred_next_step }}",
+            "Additional Notes": "={{ $json.additional_notes }}",
+            "Message": "={{ $json.message }}",
+            "Source": "={{ $json.source }}",
+            "Status": "={{ $json.status }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "google-sheets-append",
+      "name": "Append to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [520, 0],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_AFTER_CONNECTING_GOOGLE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "subject": "=New LedgerXtR lead: {{ $json.full_name }}",
+        "bodyContent": "=New contact form submission from ledgerxtr.com\n\nSubmitted: {{ $json.submitted_at }}\nName: {{ $json.full_name }}\nEmail: {{ $json.email }}\nBusiness: {{ $json.business_name }}\nOrganization type: {{ $json.organization_type }}\nIndustry: {{ $json.industry }}\nYears in business: {{ $json.years_in_business }}\nAccounting software: {{ $json.accounting_software }}\nBooks status: {{ $json.books_status }}\nStart timeline: {{ $json.start_timeline }}\nTransaction volume: {{ $json.transaction_volume }}\nServices needed: {{ $json.services_needed }}\nPreferred next step: {{ $json.preferred_next_step }}\n\nAdditional notes:\n{{ $json.additional_notes }}\n\nMessage:\n{{ $json.message }}\n\nSource: {{ $json.source }}\nStatus: {{ $json.status }}",
+        "additionalFields": {
+          "toRecipients": "info@ledgerxtr.com"
+        }
+      },
+      "id": "microsoft-outlook-send",
+      "name": "Send Outlook Email",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [780, 0],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "REPLACE_AFTER_CONNECTING_OUTLOOK",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Payload": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Send Outlook Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    {
+      "name": "ledgerxtr"
+    }
+  ]
+}

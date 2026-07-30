@@ -7,12 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test:form": "node --experimental-strip-types scripts/test-form-webhook.mjs",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.105.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
